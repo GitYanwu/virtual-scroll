@@ -1,7 +1,7 @@
 <template>
   <!-- 最外层放置一个DIV 用于 滚动区滚动 -->
-  <div class="scoll-box">
-    <div>
+  <div class="scoll-box"  @scroll.passive="fnScroll">
+    <div :style="{'paddingTop': paddingTop, 'paddingBottom': paddingBottom }">
       <li v-for="(item, index) in scrollList" :key="index" class="list-item"> 
         {{ item.name }}
       </li>
@@ -27,18 +27,25 @@ export default {
     }
   },
   created(){
-    let timeStart = Date.now();
     for(let i=0;i< 40;i++){
       this.msgList.push({
         name: "name" + i,
         id: i
       }); 
     }
-    setTimeout(() => {
-    }, 0);
   },
   mounted(){
     this.updateVisibleItems();
+  },
+  computed: {
+    // 计算paddind值,用于计算滚动条
+    paddingTop(){
+      return this.startIndex * this.itemHeight + "px";
+    },
+    paddingBottom(){
+      console.log(this.msgList.length - this.endIndex);
+      return (this.msgList.length - this.endIndex) * this.itemHeight + "px";
+    }
   },
   methods:{
       // 更新选中的 list
@@ -50,24 +57,21 @@ export default {
             const clientHeight = this.$el.clientHeight;
             // 滚动区滚动的距离
             const scrollTop = this.$el.scrollTop;
-            // 计算界面上展示的 Item 数量(这里需要 +1 是因为如果计算出来的是一个小数 需要向上进行取整 代表页面上至少展示的 Item 个数 )
-            const count = ~~(clientHeight / this.itemHeight) + 1
+            // 可视区域能展示的数量(需要向上取整)
+            const count = Math.ceil(clientHeight / this.itemHeight)
 
-            
-            this.endIndex = this.startIndex + count
-
-            console.log(count)
-            console.log(this.endIndex)
+            // 这里 +1 是为了解决 如果在滚动过程中 第一个展示不全 避免尾部空白
+            this.endIndex = this.startIndex + count  + 1
 
             // 截取部分显示数据
-            this.scrollList = this.msgList.slice(this.startIndex, this.endIndex + 1)
-
+            this.scrollList = this.msgList.slice(this.startIndex, this.endIndex)
             console.log(this.scrollList);
         }
-
-
-
-
+      },
+      fnScroll(){
+        // 滚动区滚动的时候执行
+        const scrollTop = this.$el.scrollTop;
+        console.log(scrollTop)
       }
   }
 }
