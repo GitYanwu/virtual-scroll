@@ -27,7 +27,7 @@ export default {
     }
   },
   created(){
-    for(let i=0;i< 40;i++){
+    for(let i=0;i< 400000;i++){
       this.msgList.push({
         name: "name" + i,
         id: i
@@ -43,7 +43,7 @@ export default {
       return this.startIndex * this.itemHeight + "px";
     },
     paddingBottom(){
-      console.log(this.msgList.length - this.endIndex);
+      console.log(this.endIndex);
       return (this.msgList.length - this.endIndex) * this.itemHeight + "px";
     }
   },
@@ -61,17 +61,32 @@ export default {
             const count = Math.ceil(clientHeight / this.itemHeight)
 
             // 这里 +1 是为了解决 如果在滚动过程中 第一个展示不全 避免尾部空白
-            this.endIndex = this.startIndex + count  + 1
+            this.endIndex = (this.startIndex + count  + 1) + 10
+
+            // 保证数组不会越界
+            this.endIndex = this.endIndex > this.msgList.length ?  this.msgList.length : this.endIndex
 
             // 截取部分显示数据
             this.scrollList = this.msgList.slice(this.startIndex, this.endIndex)
-            console.log(this.scrollList);
         }
       },
       fnScroll(){
         // 滚动区滚动的时候执行
         const scrollTop = this.$el.scrollTop;
-        console.log(scrollTop)
+        // 向下取整 代表上部滚动区不可见个数
+        const count = ~~(scrollTop / this.itemHeight)
+        if(count <= 5){
+          this.startIndex = 0
+        }else{
+          // 超过 代表头部预渲染数量已经超过了预设数量
+          const topCount = count - 5;// 头部多渲染数量
+          // 如果相等 代表滚动距离不足一个item的高度 不用重新计算高度
+          if(topCount === this.startIndex){
+            return;
+          }
+          this.startIndex = topCount
+        }
+        this.updateVisibleItems()
       }
   }
 }
